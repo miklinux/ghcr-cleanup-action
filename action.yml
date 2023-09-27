@@ -38,6 +38,7 @@ runs:
       id: python
       shell: bash
       run: |
+        # Detect Pythone3 interpreter
         if command -v python3 &>/dev/null; then
           echo "interpreter=python3" >> $GITHUB_OUTPUT
           exit 0
@@ -52,6 +53,10 @@ runs:
           fi
         fi
 
+    - uses: actions/checkout@v4
+      with:
+        path: ghcr-cleanup-${{ github.run_id }}
+
     - name: Run cleanup script with params
       shell: bash
       env:
@@ -63,4 +68,4 @@ runs:
         DRY_RUN: ${{ inputs.dry-run && '1' || '0' }}
       run: |
         # Executing python script
-        ${{ steps.python.outputs.interpreter }} ./delete-package-versions.py
+        ${{ steps.python.outputs.interpreter }} ./ghcr-cleanup-${{ github.run_id }}/delete-package-versions.py
