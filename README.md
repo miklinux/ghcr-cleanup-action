@@ -2,7 +2,7 @@
 
 This action deletes versions of multi-arch container packages stored on [GitHub Packages](https://github.com/features/packages).
 
-Requires Python 3 installed on the action runner
+Requires Docker installed on the action runner
 
 # Usage
 
