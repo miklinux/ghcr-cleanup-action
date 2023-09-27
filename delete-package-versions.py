@@ -7,17 +7,17 @@ import json
 import urllib.parse
 
 # GitHub PAT used for performing the API calls
-TOKEN = os.environ.get("TOKEN")
+TOKEN = os.environ.get("INPUT_TOKEN")
 # GitHub organization / ghcr.io repo owner
-PACKAGE_OWNER = os.environ.get("PACKAGE_OWNER")
+PACKAGE_OWNER = os.environ.get("INPUT_PACKAGE-OWNER")
 # Name of the package, must include relative path
-PACKAGE_NAME = os.environ.get("PACKAGE_NAME")
+PACKAGE_NAME = os.environ.get("INPUT_PACKAGE-NAME")
 # Number of versions to keep for the package
-KEEP_VERSIONS = int(os.environ.get("KEEP_VERSIONS", 5))
+KEEP_VERSIONS = int(os.environ.get("INPUT_KEEP-VERSIONS", 5))
 # Delete versions which are not referenced by any tag
-DELETE_ORPHANS = bool(int(os.environ.get("DELETE_ORPHANS", 0)))
+DELETE_ORPHANS = bool(int(os.environ.get("INPUT_DELETE-ORPHANS", 0)))
 # Don't perform DELETE API calls
-DRY_RUN = bool(int(os.environ.get("DRY_RUN", 0)))
+DRY_RUN = bool(int(os.environ.get("INPUT_DRY-RUN", 0)))
 
 # API response caches
 all_versions = []
