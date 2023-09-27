@@ -1,0 +1,66 @@
+name: ghcr.io container cleanup
+description: Remove old and untagged images from the ghcr.io container registry
+
+inputs:
+  org:
+    description: Organization/Owner for the package
+    required: true
+    type: string
+    default: ${{ github.actor }}
+  package-name:
+    description: Name of the package
+    required: true
+    type: string
+  min-versions-to-keep:
+    description: Minimum number of package versions to keep
+    required: true
+    type: string
+    default: 5
+  token:
+    description: GitHub PAT to perform API calls
+    required: true
+    type: string
+  delete-orphans:
+    description: Delete versions which are not tagged
+    required: true
+    type: boolean
+    default: false
+  dry-run:
+    description: Don't perform DELETE API calls
+    required: true
+    type: boolean
+    default: false
+
+runs:
+  using: composite
+  steps:
+    - name: Detect Python3 interpreter
+      id: python
+      shell: bash
+      run: |
+        if command -v python3 &>/dev/null; then
+          echo "interpreter=python3" >> $GITHUB_OUTPUT
+          exit 0
+        elif command -v python &>/dev/null; then
+          python_ver=$(python -c "import sys; print(sys.version_info.major)")
+          if [ "$python_ver" -eq 3 ]; then
+            echo "interpreter=python" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "Python 3 interpreter not found"
+            exit 1
+          fi
+        fi
+
+    - name: Run cleanup script with params
+      shell: bash
+      env:
+        ORG: ${{ inputs.token }}
+        PACKAGE_NAME: ${{ inputs.package-name }}
+        KEEP_MIN_VERSIONS: ${{ inputs.min-versions-to-keep }}
+        TOKEN: ${{ inputs.token }}
+        DELETE_ORPHANS: ${{ inputs.delete_orphans && '1' || '0' }}
+        DRY_RUN: ${{ inputs.dry-run && '1' || '0' }}
+      run: |
+        # Executing python script
+        ${{ steps.python.outputs.interpreter }} ./delete-package-versions.py
