@@ -16,9 +16,9 @@ PACKAGE_NAME = os.environ.get("INPUT_PACKAGE-NAME")
 # Number of versions to keep for the package
 KEEP_VERSIONS = int(os.environ.get("INPUT_KEEP-VERSIONS", 5))
 # Delete versions which are not referenced by any tag
-DELETE_ORPHANS = bool(int(os.environ.get("INPUT_DELETE-ORPHANS", 0)))
+DELETE_ORPHANS = (os.environ.get("INPUT_DELETE-ORPHANS", 'false') == 'true')
 # Don't perform DELETE API calls
-DRY_RUN = bool(int(os.environ.get("INPUT_DRY-RUN", 0)))
+DRY_RUN = (os.environ.get("INPUT_DRY-RUN", 'false') == 'true')
 
 # API response caches
 all_versions = []
