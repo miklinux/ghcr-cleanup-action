@@ -39,12 +39,16 @@ def get_children_manifests(sha):
   response = requests.get(
     f"https://ghcr.io/v2/{PACKAGE_OWNER}/{PACKAGE_NAME}/manifests/{sha}",
     headers={
-      "Accept": "application/vnd.docker.distribution.manifest.v2+json",
+      "Accept": ','.join([
+        'application/vnd.docker.distribution.manifest.v2+json',
+        'application/vnd.oci.image.index.v1+json'
+       ]),
       "Authorization": f"Bearer {base64_encode(TOKEN)}"
     }
   )
 
   if response.status_code == 404:
+    print(f"WARNING: No children packages found for SHA {sha}")
     return []
   elif response.status_code != 200:
     print(f"Failed to fetch manifest with HTTP status {response.status_code}")
