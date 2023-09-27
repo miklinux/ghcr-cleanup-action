@@ -2,7 +2,7 @@ name: ghcr.io container cleanup
 description: Remove old and untagged images from the ghcr.io container registry
 
 inputs:
-  org:
+  package-owner:
     description: Organization/Owner for the package
     required: true
     type: string
@@ -11,8 +11,8 @@ inputs:
     description: Name of the package
     required: true
     type: string
-  min-versions-to-keep:
-    description: Minimum number of package versions to keep
+  keep-versions:
+    description: Number of package versions to keep
     required: true
     type: string
     default: 5
@@ -55,9 +55,9 @@ runs:
     - name: Run cleanup script with params
       shell: bash
       env:
-        ORG: ${{ inputs.token }}
+        PACKAGE_OWNER: ${{ inputs.package-owner }}
         PACKAGE_NAME: ${{ inputs.package-name }}
-        KEEP_MIN_VERSIONS: ${{ inputs.min-versions-to-keep }}
+        KEEP_VERSIONS: ${{ inputs.keep-versions }}
         TOKEN: ${{ inputs.token }}
         DELETE_ORPHANS: ${{ inputs.delete_orphans && '1' || '0' }}
         DRY_RUN: ${{ inputs.dry-run && '1' || '0' }}

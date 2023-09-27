@@ -17,7 +17,7 @@ Requires Python 3 installed on the action runner
     # Name of the package
     package-name: my-awesome-package
     # Number of versions to keep
-    min-versions-to-keep: 5
+    keep-versions: 5
     # Delete untagged versions not belonging to any multi-arch manifest
     delete-orphans: false
     # Dry-run mode: won't perform DELETE API requests.

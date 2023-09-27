@@ -9,11 +9,11 @@ import urllib.parse
 # GitHub PAT used for performing the API calls
 TOKEN = os.environ.get("TOKEN")
 # GitHub organization / ghcr.io repo owner
-ORG = os.environ.get("ORG")
+PACKAGE_OWNER = os.environ.get("PACKAGE_OWNER")
 # Name of the package, must include relative path
 PACKAGE_NAME = os.environ.get("PACKAGE_NAME")
-# Minimum number of versions to keep for the package
-KEEP_MIN_VERSIONS = int(os.environ.get("KEEP_MIN_VERSIONS", 5))
+# Number of versions to keep for the package
+KEEP_VERSIONS = int(os.environ.get("KEEP_VERSIONS", 5))
 # Delete versions which are not referenced by any tag
 DELETE_ORPHANS = bool(int(os.environ.get("DELETE_ORPHANS", 0)))
 # Don't perform DELETE API calls
@@ -36,7 +36,7 @@ def urlencode(value):
 # which are related to the multi-arch manifest.
 def get_children_manifests(sha):
   response = requests.get(
-    f"https://ghcr.io/v2/{ORG}/{PACKAGE_NAME}/manifests/{sha}",
+    f"https://ghcr.io/v2/{PACKAGE_OWNER}/{PACKAGE_NAME}/manifests/{sha}",
     headers={
       "Accept": "application/vnd.docker.distribution.manifest.v2+json",
       "Authorization": f"Bearer {base64_encode(TOKEN)}"
@@ -58,10 +58,10 @@ def get_children_manifests(sha):
         child_version['platform'] = f"%s/%s" % (
           manifest['platform']['os'],
           manifest['platform']['architecture']
-        ) 
+        )
         result.append(child_version)
         break
-  
+
   return result
 
 # Retrieve all versions for a package and stores the
@@ -72,7 +72,7 @@ def get_all_versions():
   if len(all_versions) == 0:
     package_name = urlencode(PACKAGE_NAME)
     response = requests.get(
-      f"https://api.github.com/orgs/{ORG}/packages/container/{package_name}/versions",
+      f"https://api.github.com/orgs/{PACKAGE_OWNER}/packages/container/{package_name}/versions",
       headers={
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {TOKEN}"
@@ -84,7 +84,7 @@ def get_all_versions():
     elif response.status_code != 200:
       print(f"Failed to fetch package versions with HTTP status {response.status_code}")
       sys.exit(1)
-    
+
     # Store the value into cache
     all_versions = response.json()
 
@@ -109,12 +109,12 @@ def get_all_versions_tagged():
 
 # Slice the get_all_versions_tagged() result to return a list
 # containing the versions to keep and the versions to delete,
-# based on the KEEP_MIN_VERSIONS parameter
+# based on the KEEP_VERSIONS parameter
 def get_versions_to_delete():
   versions = get_all_versions_tagged()
   return [
-    versions[ 0:KEEP_MIN_VERSIONS ], # versions to keep
-    versions[ KEEP_MIN_VERSIONS: ]   # versions to delete
+    versions[ 0:KEEP_VERSIONS ], # versions to keep
+    versions[ KEEP_VERSIONS: ]   # versions to delete
   ]
 
 # Extract and compares all version ids from get_all_version()
@@ -122,7 +122,7 @@ def get_versions_to_delete():
 # do not have any associated tag.
 def get_orphan_versions():
   diff_version_ids = list(
-    set(extract_ids(get_all_versions())) - 
+    set(extract_ids(get_all_versions())) -
     set(extract_ids(get_all_versions_tagged()))
   )
   result = []
@@ -131,7 +131,7 @@ def get_orphan_versions():
       if diff_version_id == version['id']:
         result.append(version)
         break
-  
+
   return result
 
 # Extract all 'id' fields from the given data and return
@@ -161,7 +161,7 @@ def delete_version(version_id):
 
   package_name = urlencode(PACKAGE_NAME)
   response = requests.delete(
-    f"https://api.github.com/orgs/{ORG}/packages/container/{package_name}/versions/{version_id}",
+    f"https://api.github.com/orgs/{PACKAGE_OWNER}/packages/container/{package_name}/versions/{version_id}",
     headers={
       "Accept": "application/vnd.github+json",
       "Authorization": f"Bearer {TOKEN}"
@@ -177,15 +177,15 @@ def delete_version(version_id):
 # Main script logic
 def main():
   # Parameters validation
-  if not ORG or not PACKAGE_NAME or not TOKEN:
-    print("Please set at least ORG, PACKAGE_NAME and TOKEN environment variables.")
+  if not PACKAGE_OWNER or not PACKAGE_NAME or not TOKEN:
+    print("Please set at least PACKAGE_OWNER, PACKAGE_NAME and TOKEN environment variables.")
     sys.exit(1)
 
   i=0
   if DRY_RUN:
     print("WARNING: Running in DRY-RUN mode")
 
-  print(f"Performing API calls for package {ORG}/{PACKAGE_NAME} ...")
+  print(f"Performing API calls for package {PACKAGE_OWNER}/{PACKAGE_NAME} ...")
 
   # Loop over the get_version_to_delete() dict and perform the deletion
   keep_versions, delete_versions = get_versions_to_delete()
@@ -208,7 +208,7 @@ def main():
     print("ALL existing package versions will be deleted ...")
   else:
     print("There are no package versions to keep")
-  
+
   # Process package versions to delete
   if num_delete_versions > 0:
     print(f"Deleting {num_delete_versions} package version(s) ...")
@@ -232,7 +232,7 @@ def main():
         delete_version( child_version['id'] )
   else:
     print("There are no package versions to delete")
-    
+
   # Process orphan package versions to delete
   if DELETE_ORPHANS:
     orphan_versions = get_orphan_versions()
